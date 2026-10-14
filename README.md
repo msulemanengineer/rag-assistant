@@ -124,16 +124,6 @@ python --version
 python -c "import sys; print(sys.executable)"
 ```
 
-### Screenshot: Virtual environment
-
-Save a screenshot showing the activated environment and Python
-executable here:
-
-`docs/screenshots/01-virtual-environment.png`
-
-![Virtual environment
-screenshot](docs/screenshots/01-virtual-environment.png)
-
 ## 2. Install Dependencies
 
 Install the PDF processing dependency:
@@ -160,16 +150,6 @@ To install the saved dependencies in another environment later:
 ``` powershell
 python -m pip install -r requirements.txt
 ```
-
-### Screenshot: Dependencies installed
-
-Save a screenshot showing successful package installation or package
-versions here:
-
-`docs/screenshots/02-dependencies.png`
-
-![Dependency installation
-screenshot](docs/screenshots/02-dependencies.png)
 
 ## 3. PDF Text Extraction and Chunking
 
@@ -217,15 +197,6 @@ creation here:
 
 ![PDF ingestion screenshot](docs/screenshots/03-pdf-ingestion.png)
 
-### Screenshot: Generated chunks
-
-Capture the contents of `chunks.json`, including `source`, `page`,
-`chunk_id`, and `text` fields:
-
-`docs/screenshots/04-chunks-json.png`
-
-![Chunks JSON screenshot](docs/screenshots/04-chunks-json.png)
-
 ## 4. Generate Embeddings
 
 **File:** `src/retrieval/embeddings.py`
@@ -254,16 +225,6 @@ Expected output files:
 The model produces 384-dimensional vectors. If there are `N` chunks, the
 expected embedding matrix shape is `(N, 384)`. The actual chunk count
 depends on the PDF.
-
-### Screenshot: Embedding generation
-
-Save the terminal output showing the number of chunks and embedding
-shape here:
-
-`docs/screenshots/05-embedding-generation.png`
-
-![Embedding generation
-screenshot](docs/screenshots/05-embedding-generation.png)
 
 ## 5. Build the FAISS Vector Index
 
@@ -389,11 +350,7 @@ inside it:
 ``` text
 docs/
 └── screenshots/
-    ├── 01-virtual-environment.png
-    ├── 02-dependencies.png
     ├── 03-pdf-ingestion.png
-    ├── 04-chunks-json.png
-    ├── 05-embedding-generation.png
     ├── 06-faiss-index.png
     └── 07-semantic-search.png
 ```
