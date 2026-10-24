@@ -313,6 +313,60 @@ Save a screenshot showing a query and its retrieved passages here:
   `requirements.txt`                  Python dependency versions
   -----------------------------------------------------------------------
 
+
+## 7. LLM Integration and Answer Generation
+
+**File:** `src/generation/answer_generator.py`
+
+The answer-generation module connects the existing semantic retrieval pipeline to a hosted large language model through the Groq API.
+
+### Workflow
+
+1. Accept a user's question.
+2. Retrieve the most relevant document chunks through FAISS.
+3. Attach source filenames and page numbers to the retrieved excerpts.
+4. Construct a prompt containing the question and retrieved evidence.
+5. Send the prompt to the configured LLM.
+6. Return the generated answer and the retrieved source metadata.
+
+### Configuration
+
+Create a `.env` file in the project root:
+
+```env
+GROQ_API_KEY=your_actual_api_key_here
+GROQ_MODEL=openai/gpt-oss-20b
+```
+
+Never commit `.env` or expose API keys in screenshots or public repositories.
+
+### Run the RAG assistant
+
+With the virtual environment activated, run:
+
+```powershell
+python -m src.generation.answer_generator
+```
+
+Test answerable questions, paraphrased questions, and questions that cannot be answered from the documents.
+
+### Current limitations
+
+- The model may still generate unsupported statements despite the grounding instructions.
+- Source labels need to be checked against the claims in the answer.
+- Retrieval quality and answer correctness have not yet been formally evaluated.
+- The application currently runs in the terminal and is not yet exposed through an API or web interface.
+
+### Screenshot
+
+Save a screenshot of an actual question, generated answer, and retrieved sources to:
+
+`docs/screenshots/08-llm-answer-generation.png`
+`docs/screenshots/08-llm-answer-generation2.png`
+`docs/screenshots/08-llm-answer-generation3.png`
+
+Ensure the screenshot does not expose your API key or other secrets.
+
 ## Current Limitations
 
 -   The system retrieves passages but does not yet generate answers with
