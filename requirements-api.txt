@@ -1,0 +1,4 @@
+# Extra dependencies for the FastAPI layer (src/api).
+# requirements.txt (UTF-16) is left untouched; install both.
+fastapi==0.162.0
+uvicorn[standard]==0.54.0

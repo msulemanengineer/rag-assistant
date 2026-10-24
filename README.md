@@ -1,10 +1,9 @@
 # RAG Assistant
 
-A locally developed Retrieval-Augmented Generation (RAG) project. This
-README documents the implementation completed so far: PDF text
-extraction, character-based chunking, embedding generation, FAISS
-indexing, and semantic search. LLM-based answer generation has **not**
-been integrated yet.
+A locally developed Retrieval-Augmented Generation (RAG) project: PDF
+text extraction, chunking, embeddings, FAISS retrieval, grounded answer
+generation through Groq, a FastAPI backend, and a Next.js web interface
+(DocuMind).
 
 ## Project Status
 
@@ -14,9 +13,9 @@ been integrated yet.
 -   [x] Text embeddings with Sentence Transformers
 -   [x] Vector similarity index with FAISS
 -   [x] Semantic search over document chunks
--   [ ] LLM-based answer generation
--   [ ] FastAPI backend
--   [ ] Web interface
+-   [x] LLM-based answer generation
+-   [x] FastAPI backend
+-   [x] Web interface (chat, sources; no upload yet)
 -   [ ] Retrieval evaluation and deployment
 
 ## Architecture So Far
@@ -49,8 +48,8 @@ User question --> query embedding --> similarity search
                               Top-k relevant chunks
 ```
 
-At this stage, the application retrieves relevant passages. It does not
-yet generate a natural-language answer with an LLM.
+Retrieved passages are then passed to an LLM to generate the answer
+(section 7). The web app (section 8) sits on top of that.
 
 ## Technology Stack
 
@@ -355,7 +354,6 @@ Test answerable questions, paraphrased questions, and questions that cannot be a
 - The model may still generate unsupported statements despite the grounding instructions.
 - Source labels need to be checked against the claims in the answer.
 - Retrieval quality and answer correctness have not yet been formally evaluated.
-- The application currently runs in the terminal and is not yet exposed through an API or web interface.
 
 ### Screenshot
 
@@ -367,10 +365,86 @@ Save a screenshot of an actual question, generated answer, and retrieved sources
 
 Ensure the screenshot does not expose your API key or other secrets.
 
+
+## 8. Web Application (FastAPI + Next.js)
+
+```text
+Browser (Next.js, frontend/)  --HTTP/JSON-->  FastAPI (src/api/)  -->  generate_answer()
+                                                                       -> search_documents() -> FAISS
+                                                                       -> Groq (key stays server-side)
+```
+
+-   **Backend** `src/api/main.py` is a thin layer. It calls the existing
+    `generate_answer()` and reads `embedding_metadata.json`; it does not
+    duplicate pipeline logic. `src/api/schemas.py` holds the Pydantic models.
+-   **Frontend** `frontend/` uses Next.js (App Router), TypeScript, Tailwind CSS
+    and shadcn/ui. API calls live in `frontend/src/lib/api.ts`; the product
+    name is set in `frontend/src/lib/config.ts` (`APP_NAME`).
+    Conversations are held in memory and are lost on reload.
+
+### Install
+
+```powershell
+# Backend (venv activated)
+python -m pip install -r requirements.txt -r requirements-api.txt
+
+# Frontend
+cd frontend
+npm install
+```
+
+### Configure
+
+| File | Variable | Purpose |
+|------|----------|---------|
+| `.env` (root) | `GROQ_API_KEY`, `GROQ_MODEL` | LLM access. Server-side only. |
+| `.env` (root) | `FRONTEND_ORIGINS` | Optional CORS allow-list. Default: `http://localhost:3000`, `http://127.0.0.1:3000` |
+| `frontend/.env.local` | `NEXT_PUBLIC_API_BASE_URL` | Backend URL. Default `http://localhost:8000` |
+
+Templates: `.env.example` and `frontend/.env.example` (placeholders only).
+`NEXT_PUBLIC_*` values are exposed to the browser; never put secrets there.
+
+### Run (two terminals)
+
+```powershell
+# 1. Backend, from the project root
+uvicorn src.api.main:app --reload --port 8000
+
+# 2. Frontend
+cd frontend
+npm run dev        # http://localhost:3000
+```
+
+The first chat request is slow because `search_documents()` loads the
+embedding model on every call (existing behavior, not changed).
+
+### API
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/health` | Status, whether the index exists, whether a Groq key is configured |
+| GET | `/api/documents` | Indexed documents with page/chunk counts, derived from `embedding_metadata.json` |
+| POST | `/api/chat` | Body `{"question": str (1-2000 chars), "top_k": int 1-20 (default 5)}`. Returns `{answer, sources[{label, document, page, similarity, text}], model}` |
+
+Errors: `422` invalid input, `503` index missing or LLM not configured,
+`502` generation failed. Interactive docs: `http://localhost:8000/docs`.
+
+### Web app limitations
+
+-   **No browser upload.** Ingestion (`src/test_ingestion.py`) is hardcoded to one
+    PDF and overwrites `chunks.json`; embeddings and the FAISS index are rebuilt
+    from scratch. Safe multi-document upload needs per-document chunk storage
+    and an index rebuild step, which is a separate change. To add documents
+    today, use the command-line pipeline.
+-   Responses are not streamed and generation cannot be cancelled, so the UI has
+    no stop button.
+-   Conversations are not persisted and are not sent to the model as history:
+    each question is answered independently.
+-   The `sim` value on each source is cosine similarity, not a confidence score.
+-   Single-user local use only; no authentication or rate limiting.
+
 ## Current Limitations
 
--   The system retrieves passages but does not yet generate answers with
-    an LLM.
 -   Retrieval quality has not yet been measured against a labelled
     evaluation dataset.
 -   Character-based chunking may split sentences or sections awkwardly.
